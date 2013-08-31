@@ -23,10 +23,12 @@ import org.neo4j.graphdb.index.ReadableIndex;
  * @author Rihani Asma
  */
 public class CommunQuery {
+    
      GraphDatabaseService graphDb = new GraphDatabaseFactory().
             newEmbeddedDatabaseBuilder("C:/Users/acer/Desktop/NEO4J-HOME/data/graph.db").
             setConfig(GraphDatabaseSettings.node_keys_indexable, "texte").
             setConfig(GraphDatabaseSettings.node_auto_indexing, "true").
+             setConfig(GraphDatabaseSettings.mapped_memory_page_size, "20M").
             newGraphDatabase();
     Transaction tx4j;// = graphDb.beginTx();
 
@@ -115,10 +117,10 @@ public class CommunQuery {
     }
     
     
-     public List<Node> getNodeCibleOfSource(Node s) {
+     public List<Node> getNodeCible(Node s) {
         List list_node = new ArrayList();
         ExecutionEngine engine = new ExecutionEngine(graphDb);
-        ExecutionResult result = engine.execute("start n=node("+s.getId()+") match n--b return distinct b");
+        ExecutionResult result = engine.execute("start n=node("+s.getId()+") match n--b return distinct b order by ID(b)");
         //ExecutionResult result = engine.execute("start n=node({node}) match n-->b return distinct b", params);
         Iterator<Node> n_column = result.columnAs("b");
         while (n_column.hasNext()) {
