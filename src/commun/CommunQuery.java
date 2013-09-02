@@ -28,7 +28,7 @@ public class CommunQuery {
             newEmbeddedDatabaseBuilder("C:/Users/acer/Desktop/NEO4J-HOME/data/graph.db").
             setConfig(GraphDatabaseSettings.node_keys_indexable, "texte").
             setConfig(GraphDatabaseSettings.node_auto_indexing, "true").
-             setConfig(GraphDatabaseSettings.mapped_memory_page_size, "20M").
+             setConfig(GraphDatabaseSettings.mapped_memory_page_size, "60M").
             newGraphDatabase();
     Transaction tx4j;// = graphDb.beginTx();
 
@@ -80,6 +80,7 @@ public class CommunQuery {
      * existe
      */
     public List<Node> getAllNodeSource(String req) {
+        tx4j = graphDb.beginTx();
         List list_node = new ArrayList();
         List list_id = getNodeId(req);
         ExecutionEngine engine = new ExecutionEngine(graphDb);
@@ -91,6 +92,8 @@ public class CommunQuery {
             Node node = n_column.next();
             list_node.add(node);
         }
+        tx4j.success();
+        tx4j.finish();
         return list_node;
     }
 
@@ -102,6 +105,7 @@ public class CommunQuery {
      * requete dans la base s'il existe
      */
     public List<Node> getAllNodeCible(List<Node> source) {
+        tx4j = graphDb.beginTx();
         List list_node = new ArrayList();
         ExecutionEngine engine = new ExecutionEngine(graphDb);
         Map<String, Object> params = new HashMap<String, Object>();
@@ -113,11 +117,14 @@ public class CommunQuery {
             Node node = n_column.next();
                 list_node.add(node);
         }
+        tx4j.success();
+        tx4j.finish();
         return list_node;
     }
     
     
      public List<Node> getNodeCible(Node s) {
+         tx4j = graphDb.beginTx();
         List list_node = new ArrayList();
         ExecutionEngine engine = new ExecutionEngine(graphDb);
         ExecutionResult result = engine.execute("start n=node("+s.getId()+") match n--b return distinct b order by ID(b)");
@@ -127,7 +134,78 @@ public class CommunQuery {
             Node node = n_column.next();
                 list_node.add(node);
         }
+        tx4j.success();
+        tx4j.finish();
         return list_node;
+    }
+     
+     
+  public Map<Integer, Integer> getOccurSourceCible(Node s) {
+        tx4j = graphDb.beginTx();
+        ExecutionEngine engine = new ExecutionEngine(graphDb);
+        ExecutionResult result = engine.execute("start n=node(" + s.getId() + ") match n--c return ID(c) order by ID(c)");
+        ExecutionResult result2 = engine.execute("start n=node(" + s.getId() + ") match n-[r:OCCUR]-c return r.OCCUR as occur order by ID(c)");
+        Map<Integer, Integer> map = new HashMap();
+        Iterator n_column = result.columnAs("ID(c)");
+        Iterator occurence = result2.columnAs("occur");
+        while (n_column.hasNext() && occurence.hasNext()) {
+            int n = (int)(long) n_column.next();
+            int nbrnode = (int) occurence.next();
+            map.put(n, nbrnode);
+            // System.out.println(id+" ==> " +maxoccur);
+        }
+        tx4j.success();
+        tx4j.finish();
+        return map;
+    }
+  
+  public Map<Node, Integer> getOccurSC(Node s) {
+        tx4j = graphDb.beginTx();
+        ExecutionEngine engine = new ExecutionEngine(graphDb);
+        ExecutionResult result = engine.execute("start n=node(" + s.getId() + ") match n--c return c order by ID(c)");
+        ExecutionResult result2 = engine.execute("start n=node(" + s.getId() + ") match n-[r:OCCUR]-c return r.OCCUR as occur order by ID(c)");
+        Map<Node, Integer> map = new HashMap();
+        Iterator<Node> n_column = result.columnAs("c");
+        Iterator occurence = result2.columnAs("occur");
+        while (n_column.hasNext() && occurence.hasNext()) {
+            Node n = n_column.next();
+            int nbrnode = (int) occurence.next();
+            map.put(n, nbrnode);
+            // System.out.println(id+" ==> " +maxoccur);
+        }
+        tx4j.success();
+        tx4j.finish();
+        return map;
+    }
+ public int getOccurCC(Node c1,Node c2) {
+        tx4j = graphDb.beginTx();
+        int occur=0;
+        ExecutionEngine engine = new ExecutionEngine(graphDb);
+        ExecutionResult result = engine.execute("start c1=node(" + c1.getId() + "),c2=node(" + c2.getId() + ") match c1-[r:OCCUR]-c2 return r.OCCUR as occur");
+        Iterator n_column = result.columnAs("occur");
+        if (n_column.hasNext()){
+          occur = (int) n_column.next(); 
+        }
+        tx4j.success();
+        tx4j.finish();
+        return occur;
+    }
+    //methode permet de recupere le nombre des noeuds source dans un cycle
+    public int nombreNodeSourceInCycle(List<Node> listcycle, List<Node> listsource) {
+        tx4j = graphDb.beginTx();
+        int nbrsource = 0;
+        ExecutionEngine engine = new ExecutionEngine(graphDb);
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("cycle", listcycle);
+        params.put("source", listsource);
+        ExecutionResult result = engine.execute("start c=node({cycle}),s=node({source})where c=s return  count(c) as b", params);
+        Iterator column = result.columnAs("b");
+        if (column.hasNext()) {
+            nbrsource = (int) (long) column.next();
+        }
+        tx4j.success();
+        tx4j.finish();
+        return nbrsource;
     }
 
     public GraphDatabaseService getGraphDb() {
