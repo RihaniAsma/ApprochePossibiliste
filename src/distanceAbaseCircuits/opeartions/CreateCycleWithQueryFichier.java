@@ -16,10 +16,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -56,7 +52,7 @@ public class CreateCycleWithQueryFichier {
        tx4j.success();
        tx4j.finish();
     }
-    //methode recuper les noeuds cibles  commun entre  source s et un noeud cible c
+    //methode recuper les noeuds cibles  commun entre  deux noeuds cibles
 
     public void IntersectionCC(Node s, Node c1, Node c2, CSVWriter writer) {
         tx4j= graphDb.beginTx();

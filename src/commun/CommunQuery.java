@@ -177,11 +177,11 @@ public class CommunQuery {
         tx4j.finish();
         return map;
     }
- public int getOccurCC(Node c1,Node c2) {
+ public int getOccurCC(int c1,int c2) {
         tx4j = graphDb.beginTx();
         int occur=0;
         ExecutionEngine engine = new ExecutionEngine(graphDb);
-        ExecutionResult result = engine.execute("start c1=node(" + c1.getId() + "),c2=node(" + c2.getId() + ") match c1-[r:OCCUR]-c2 return r.OCCUR as occur");
+        ExecutionResult result = engine.execute("start c1=node(" + c1 + "),c2=node(" + c2 + ") match c1-[r:OCCUR]-c2 return r.OCCUR as occur");
         Iterator n_column = result.columnAs("occur");
         if (n_column.hasNext()){
           occur = (int) n_column.next(); 
@@ -191,7 +191,7 @@ public class CommunQuery {
         return occur;
     }
     //methode permet de recupere le nombre des noeuds source dans un cycle
-    public int nombreNodeSourceInCycle(List<Node> listcycle, List<Node> listsource) {
+    public int nombreNodeSourceInCycle(List<String> listcycle, List<Node> listsource) {
         tx4j = graphDb.beginTx();
         int nbrsource = 0;
         ExecutionEngine engine = new ExecutionEngine(graphDb);

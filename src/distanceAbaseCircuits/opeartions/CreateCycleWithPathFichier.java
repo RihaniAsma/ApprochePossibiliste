@@ -4,14 +4,18 @@
  */
 package distanceAbaseCircuits.opeartions;
 
+import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import commun.CommunQuery;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -83,7 +87,7 @@ public class CreateCycleWithPathFichier {
         Iterable<Node> Itnodes;
         PathFinder<Path> finder = GraphAlgoFactory.allPaths(
                 Traversal.expanderForTypes(RelTypes.OCCUR, Direction.BOTH), 2);
-        List<Node> aband = new ArrayList<>();
+        List<Node> aband = new ArrayList();
         aband.add(s);
         Iterable<Path> paths = finder.findAllPaths(c1, c2);
         Iterator<Path> p = paths.iterator();
@@ -102,15 +106,12 @@ public class CreateCycleWithPathFichier {
     public void creationFichier(String file,Node s) throws UnsupportedEncodingException, FileNotFoundException, IOException {
 
         Node c1, c2;
-        List<Node> aband = new ArrayList<>();
-        //Node s = cq.FindNode("biologique1");
+        List<Node> aband = new ArrayList();
         List<Node> cibles = cq.getNodeCible(s);
-        // for(Node c:cibles)
-        // System.out.print(c.getId()+",");
         CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(file+"/cycle2_3.csv"), "UTF-8"), '\t', CSVWriter.NO_QUOTE_CHARACTER);
         for (int i = 0; i < cibles.size(); i++) {
             c1 = cibles.get(i);
-            CSVWriter writer1 = new CSVWriter(new OutputStreamWriter(new FileOutputStream(file+"/"+i+"cycle4.csv"), "UTF-8"), '\t', CSVWriter.NO_QUOTE_CHARACTER);
+            CSVWriter writer1 = new CSVWriter(new OutputStreamWriter(new FileOutputStream(file+"/"+c1.getId()+"cycle4.csv"), "UTF-8"), '\t', CSVWriter.NO_QUOTE_CHARACTER);
             System.out.println(c1.getId() + " cibles");
             cycleSize2_3(s, c1, aband,writer);
              aband.add(c1);
@@ -126,5 +127,81 @@ public class CreateCycleWithPathFichier {
 
     }
     
-     public void calculDataCycle(String file,Node s){}
+    
+     public void calculDataCycle2_3(String file,Node s,List<Node> sources) throws FileNotFoundException, IOException{
+     Map<Integer, Integer> occurSC=cq.getOccurSourceCible(s);
+     float mai;
+     int nsi,idc1,idc2,occsc1,occc1c2;
+     List<String> idnode ;
+         //get calcul cycle2_3
+          CSVReader reader = new CSVReader(new FileReader(file+"/cycle2_3.csv"), '\t');
+        CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(file+"/cycle2_3Calcul.csv"), "UTF-8"), '\t', CSVWriter.NO_QUOTE_CHARACTER);
+         String[] nextLine;
+     while((nextLine=reader.readNext())!=null){
+          idc1=Integer.parseInt(nextLine[1]);
+          occsc1=occurSC.get(idc1);
+     if(nextLine.length==2){
+        idnode = Arrays.asList(nextLine);
+        nsi=cq.nombreNodeSourceInCycle(idnode, sources);
+       // System.out.println(nsi);
+        mai=(float)occsc1;
+        //System.out.println(mai);
+        String[] cyclecal={nextLine[0],nextLine[1],String.valueOf(mai),String.valueOf(nsi)};
+        writer.writeNext(cyclecal);
+        
+     }
+     if(nextLine.length==3){
+          idc2=Integer.parseInt(nextLine[2]);
+      idnode = Arrays.asList(nextLine);
+        nsi=cq.nombreNodeSourceInCycle(idnode, sources);
+       // System.out.println(nsi);
+        occc1c2=cq.getOccurCC(idc1,idc2);
+         mai=(float)(occsc1+occurSC.get(idc2)+occc1c2)/3;
+       // System.out.println(mai);
+        String[] cyclecal={nextLine[0],nextLine[1],nextLine[2],String.valueOf(mai),String.valueOf(nsi)};
+        writer.writeNext(cyclecal);
+     }
+     }
+     writer.close();
+     reader.close();
+      File MyFile = new File(file+"/cycle2_3.csv"); 
+     if(MyFile.delete())
+         System.out.println(file+"/cycle2_3.csv est supprimer");
+     }
+    public void calculDataCycle4(String file,Node s,List<Node> sources) throws FileNotFoundException, IOException{
+     Map<Integer, Integer> occurSC=cq.getOccurSourceCible(s);
+     float mai;
+     int nsi,idc1,idc2,idx,occsc1,occsc2,occc1x,occc2x;
+     File MyFile;
+     List<String> idnode;
+      CSVReader reader ;
+      CSVWriter writer ;
+         //get calcul cycle4
+      List<Node> cibels = cq.getNodeCible(s);
+            for (Node c1 : cibels) {
+            reader = new CSVReader(new FileReader(file + "/" + c1.getId() + "cycle4.csv"), '\t');
+           writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(file+"/" + c1.getId() +"cycle4Calcul.csv"), "UTF-8"), '\t', CSVWriter.NO_QUOTE_CHARACTER);
+         String[] nextLine;
+     while((nextLine=reader.readNext())!=null){
+          idc1=Integer.parseInt(nextLine[1]);
+          idc2=Integer.parseInt(nextLine[3]);
+          idx=Integer.parseInt(nextLine[2]);
+          occsc1=occurSC.get(idc1);
+          occsc2=occurSC.get(idc2);
+          occc1x=cq.getOccurCC(idc1,idx);
+          occc2x=cq.getOccurCC(idc2,idx);
+          idnode = Arrays.asList(nextLine);
+         nsi=cq.nombreNodeSourceInCycle(idnode, sources);
+         mai=(float)(occsc1+occsc2+occc1x+occc2x)/4;
+        String[] cyclecal={nextLine[0],nextLine[1],nextLine[2],nextLine[3],String.valueOf(mai),String.valueOf(nsi)};
+        writer.writeNext(cyclecal);
+     }
+     reader.close();
+     writer.close();
+      MyFile = new File(file + "/" + c1.getId() + "cycle4.csv"); 
+     if(MyFile.delete())
+         System.out.println(file + "/" + c1.getId() + "cycle4.csv est supprimer");
+            }
+     }
+    
 }
