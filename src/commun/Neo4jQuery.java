@@ -5,10 +5,12 @@
 package commun;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -22,7 +24,7 @@ import org.neo4j.graphdb.index.ReadableIndex;
  *
  * @author Rihani Asma
  */
-public class CommunQuery {
+public class Neo4jQuery {
     
      GraphDatabaseService graphDb = new GraphDatabaseFactory().
             newEmbeddedDatabaseBuilder("C:/Users/acer/Desktop/NEO4J-HOME/data/graph.db").
@@ -32,9 +34,9 @@ public class CommunQuery {
             newGraphDatabase();
     Transaction tx4j;// = graphDb.beginTx();
 
-    public CommunQuery() {
+    public Neo4jQuery() {
     }
-
+/*************************CommunQuery***********************************************/
     /**
      * verif si un noeud existe dans la base ou pas
      *
@@ -56,9 +58,9 @@ public class CommunQuery {
      * @param req requete entre par l'user
      * @return id node
      */
-    public List getNodeId(String req) {
+    public List<Long> getNodeId(String req) {
 
-        List list_id = new ArrayList();
+        List<Long> list_id = new ArrayList();
         String[] split_req = req.toLowerCase().split(" ");
         for (String mot : split_req) {
             Node n = FindNode(mot);
@@ -122,13 +124,87 @@ public class CommunQuery {
         return list_node;
     }
     
+      public void shutdowndb() {
+        graphDb.shutdown();
+    } 
+    /*******************************Query For Approche Possib***************************************************/
+     public Map<Integer,Float> Frequency(Node c,List<Node> source){
+   
+        ExecutionEngine engine = new ExecutionEngine(graphDb);
+         Map<String, Object> params = new HashMap<String, Object>();
+        params.put("node", source);
+        ExecutionResult result = engine.execute("start n=node({node}),b=node(" + c.getId() + ") match n-[r:OCCUR]-b return r.OCCUR order by ID(n)",params);
+       // ExecutionResult result = engine.execute("start n=node({node}),b=node(" + c.getId() + ") match n-[r:OCCUR]->b return r.OCCUR order by ID(n)",params);
+        Iterator occur_column = result.columnAs("r.OCCUR");
+        ExecutionResult result2 = engine.execute("start n=node({node}),b=node(" + c.getId() + ") match n-[r:OCCUR]-b return ID(n) order by ID(n)",params);
+       // ExecutionResult result2 = engine.execute("start n=node({node}),b=node(" + c.getId() + ") match n-[r:OCCUR]->b return ID(n) order by ID(n)",params);
+        Iterator n_column = result2.columnAs("ID(n)");
+        int occur;
+        int n;
+         Map<Integer, Integer> map = new TreeMap();
+        while (occur_column.hasNext()&& n_column.hasNext()) {
+            occur = (int) occur_column.next();
+            n= (int) (long)n_column.next();
+             map.put(n, occur);
+        }
+        int max=Collections.max(map.values());
+    
+         Map<Integer, Float> mapft = new TreeMap();
+         int id;
+         float ft;
+        for(Node s:source)
+        {
+            id=(int) s.getId();
+           //  System.out.println(id);
+        if(map.containsKey(id)){
+             ft=(float)map.get(id)/(float)max;
+            //  System.out.println(tf);
+            mapft.put(id, ft);
+                    }
+        else 
+        {
+            ft=0;
+            mapft.put(id,ft);
+        }
+        }
+                return mapft;
+    }
+    
+      public Map<Integer, Float> log(List<Node> source,int nCa) {
+        ExecutionEngine engine = new ExecutionEngine(graphDb);
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("node", source);
+        ExecutionResult result = engine.execute("start n=node({node}) match n--c return n,count(distinct c) as b", params);
+        ExecutionResult result2 = engine.execute("start n=node({node}) match n--c return n,count(distinct c) as b", params);
+       // ExecutionResult result = engine.execute("start n=node({node}) match n-->c return n,count(distinct c) as b", params);
+       // ExecutionResult result2 = engine.execute("start n=node({node}) match n-->c return n,count(distinct c) as b", params);
+       // int nCa=getNombreAllNodeCible(source);
+        Map<Integer, Float> map = new TreeMap();
+        Iterator<Node> n_column = result.columnAs("n");
+        Iterator  column2 = result2.columnAs("b");
+        int nAi;
+        float log10;
+       while (n_column.hasNext() && column2.hasNext()) {
+            Node n=n_column.next();
+             int id = (int)(long) n.getId();
+           nAi = (int)(long) column2.next();
+           log10=(float) Math.log10((double) nCa / (double) nAi);
+            map.put(id, log10);
+           // System.out.println(id+" ==> " +maxoccur);
+        }
+       
+        return map;
+    }
+    
+    
+    /*******************************Query Calcul A Base De Circuit***************************************************/
+    
     
      public List<Node> getNodeCible(Node s) {
          tx4j = graphDb.beginTx();
         List list_node = new ArrayList();
         ExecutionEngine engine = new ExecutionEngine(graphDb);
         ExecutionResult result = engine.execute("start n=node("+s.getId()+") match n--b return distinct b order by ID(b)");
-        //ExecutionResult result = engine.execute("start n=node({node}) match n-->b return distinct b", params);
         Iterator<Node> n_column = result.columnAs("b");
         while (n_column.hasNext()) {
             Node node = n_column.next();
@@ -208,11 +284,5 @@ public class CommunQuery {
         return nbrsource;
     }
 
-    public GraphDatabaseService getGraphDb() {
-        return graphDb;
-    }
-
-     public void shutdowndb() {
-        graphDb.shutdown();
-    } 
+   
 }

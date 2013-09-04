@@ -4,97 +4,27 @@
  */
 package approchepossibiliste.operations;
 
-import commun.CommunQuery;
+import commun.ResultBean;
+import commun.Neo4jQuery;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import org.neo4j.cypher.javacompat.*;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 /**
  *
  * @author acer
  */
-public class DataQueryPossib {
+public class CalculPossibiliste {
 
-    public DataQueryPossib() {
+    public CalculPossibiliste() {
     }
 
-      CommunQuery cq=new CommunQuery();
-     GraphDatabaseService graphDb =cq.getGraphDb();
-    public Map<Integer,Float> Frequency(Node c,List<Node> source){
+     public Neo4jQuery cq=new Neo4jQuery();
    
-        ExecutionEngine engine = new ExecutionEngine(graphDb);
-         Map<String, Object> params = new HashMap<String, Object>();
-        params.put("node", source);
-        ExecutionResult result = engine.execute("start n=node({node}),b=node(" + c.getId() + ") match n-[r:OCCUR]-b return r.OCCUR order by ID(n)",params);
-       // ExecutionResult result = engine.execute("start n=node({node}),b=node(" + c.getId() + ") match n-[r:OCCUR]->b return r.OCCUR order by ID(n)",params);
-        Iterator occur_column = result.columnAs("r.OCCUR");
-        ExecutionResult result2 = engine.execute("start n=node({node}),b=node(" + c.getId() + ") match n-[r:OCCUR]-b return ID(n) order by ID(n)",params);
-       // ExecutionResult result2 = engine.execute("start n=node({node}),b=node(" + c.getId() + ") match n-[r:OCCUR]->b return ID(n) order by ID(n)",params);
-        Iterator n_column = result2.columnAs("ID(n)");
-        int occur;
-        int n;
-         Map<Integer, Integer> map = new TreeMap();
-        while (occur_column.hasNext()&& n_column.hasNext()) {
-            occur = (int) occur_column.next();
-            n= (int) (long)n_column.next();
-             map.put(n, occur);
-        }
-        int max=Collections.max(map.values());
-    
-         Map<Integer, Float> mapft = new TreeMap();
-         int id;
-         float ft;
-        for(Node s:source)
-        {
-            id=(int) s.getId();
-           //  System.out.println(id);
-        if(map.containsKey(id)){
-             ft=(float)map.get(id)/(float)max;
-            //  System.out.println(tf);
-            mapft.put(id, ft);
-                    }
-        else 
-        {
-            ft=0;
-            mapft.put(id,ft);
-        }
-        }
-                return mapft;
-    }
-    
-      public Map<Integer, Float> log(List<Node> source,int nCa) {
-        ExecutionEngine engine = new ExecutionEngine(graphDb);
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("node", source);
-        ExecutionResult result = engine.execute("start n=node({node}) match n--c return n,count(distinct c) as b", params);
-        ExecutionResult result2 = engine.execute("start n=node({node}) match n--c return n,count(distinct c) as b", params);
-       // ExecutionResult result = engine.execute("start n=node({node}) match n-->c return n,count(distinct c) as b", params);
-       // ExecutionResult result2 = engine.execute("start n=node({node}) match n-->c return n,count(distinct c) as b", params);
-       // int nCa=getNombreAllNodeCible(source);
-        Map<Integer, Float> map = new TreeMap();
-        Iterator<Node> n_column = result.columnAs("n");
-        Iterator  column2 = result2.columnAs("b");
-        int nAi;
-        float log10;
-       while (n_column.hasNext() && column2.hasNext()) {
-            Node n=n_column.next();
-             int id = (int)(long) n.getId();
-           nAi = (int)(long) column2.next();
-           log10=(float) Math.log10((double) nCa / (double) nAi);
-            map.put(id, log10);
-           // System.out.println(id+" ==> " +maxoccur);
-        }
-       
-        return map;
-    }
        /**
      * @param ft map des fréquences d'un noeud cible 
      * @return le resulat de degré de possibilité d'un noeud cible
@@ -138,7 +68,7 @@ public class DataQueryPossib {
       
     public float degreDePertinencePossibiliste(Node c,List<Node> source ,Map<Integer, Float> log){
         
-         Map<Integer,Float> ft=Frequency(c,source);
+         Map<Integer,Float> ft=cq.Frequency(c,source);
          float dpp,dp,n;
          //degre possibiliste
          if(ft.containsValue(0))
@@ -157,35 +87,36 @@ public class DataQueryPossib {
      * @param req requete de l'user
      * @return liste des id des noeuds avec les DPP corespondants par ordre decroissant
      */
-     public  List<ResultBean> calculPossibiliste(String req) {
+     public  List<ResultBean> calculScore(String req) {
         //liste des noeuds sources de la requete
         List<Node> node_s = cq.getAllNodeSource(req);
         System.out.println("source "+node_s.size());
         //liste des noeuds cibles de tous les neouds sources
         List<Node> node_c = cq.getAllNodeCible(node_s);
          System.out.println("cible "+node_c.size());
-          List<ResultBean> list_rb = new ArrayList<ResultBean>();
+          List<ResultBean> list_rb = new ArrayList();
       // int i=1;
        int nCa=node_c.size();
        float dpp;
         ResultBean rb;
-       Map<Integer, Float> log=log(node_s,nCa);
+       Map<Integer, Float> log=cq.log(node_s,nCa);
         for(Node c:node_c){
             rb=new ResultBean();
              rb.setNodeC(c);
            dpp=degreDePertinencePossibiliste(c, node_s,log);
-             rb.setDPP(dpp);
+             rb.setScore(dpp);
         list_rb.add(rb);
            //System.out.println(i);
            //i++;
         }
          Collections.sort(list_rb);
+         //reverser l'ordre pour avoir un ordre décroissant
         Collections.reverse(list_rb);
        return list_rb;
     }
     
-  public static void main(String[] args) {
-     DataQueryPossib dq = new DataQueryPossib();
+ /* public static void main(String[] args) {
+     CalculPossibiliste dq = new CalculPossibiliste();
  //List<Node> lst= dq.getAllNodeSource("discussion politique décision négociation préalable partir politique groupe social résultat final consultation Referendum constitution Afrique Sud "); 
  List<Node> lst= dq.cq.getAllNodeSource ("biologique1");
  //Node c=dq.FindNode("biologique3");
@@ -195,7 +126,7 @@ public class DataQueryPossib {
  System.out.println(m1.size());
  System.out.println(m2.size());*/
   //System.out.println("source "+lst.size());
- List<Node> cible=dq.cq.getAllNodeCible(lst);
+ /*List<Node> cible=dq.cq.getAllNodeCible(lst);
  //System.out.println("cible "+cible.size());
  //System.out.println(dq.getNombreNodeCible(lst));
 for(Node n:cible)
@@ -213,6 +144,6 @@ for(Node n:cible)
     			Object key= iterateur.next();
     			System.out.println (key+" ==>"+m.get(key));
     		}
- dq.shutdowndb();*/
-     }
+ dq.shutdowndb();
+     }*/
 }

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package approchepossibiliste.operations;
+package commun;
 
 import org.neo4j.graphdb.Node;
 
@@ -12,7 +12,7 @@ import org.neo4j.graphdb.Node;
  */
 public class ResultBean implements Comparable<ResultBean> {
     //resulat DPP d'un noeud cible j
-    float DPP;
+    float score;
     
     //noeud cible j
     Node nodeC;
@@ -28,23 +28,23 @@ public class ResultBean implements Comparable<ResultBean> {
     public ResultBean() {
     }
 
-    public float getDPP() {
-        return DPP;
+    public float getScore() {
+        return score;
     }
 
-    public void setDPP(float DPP) {
-        this.DPP = DPP;
+    public void setScore(float score) {
+        this.score = score;
     }
-    
+
 // utiliser pour facilité la comparaison
     @Override
     public int compareTo(ResultBean o) {
     int resultat = 0;
-      if (this.DPP > o.DPP)
+      if (this.score > o.score)
          resultat = 1;
-      if (this.DPP < o.DPP)
+      if (this.score < o.score)
          resultat = -1;
-      if (this.DPP == o.DPP)
+      if (this.score == o.score)
          resultat = 0;
       return resultat;}
 }
