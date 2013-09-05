@@ -31,11 +31,20 @@ public class Neo4jQuery {
             setConfig(GraphDatabaseSettings.node_keys_indexable, "texte").
             setConfig(GraphDatabaseSettings.node_auto_indexing, "true").
              setConfig(GraphDatabaseSettings.mapped_memory_page_size, "60M").
+             setConfig(GraphDatabaseSettings.nodestore_mapped_memory_size, "60M").
+             setConfig(GraphDatabaseSettings.query_cache_size, "600000").
+             setConfig(GraphDatabaseSettings.relationshipstore_mapped_memory_size, "60M").
             newGraphDatabase();
     Transaction tx4j;// = graphDb.beginTx();
 
     public Neo4jQuery() {
     }
+
+    public GraphDatabaseService getGraphDb() {
+        return graphDb;
+    }
+    
+    
 /*************************CommunQuery***********************************************/
     /**
      * verif si un noeud existe dans la base ou pas
@@ -44,11 +53,14 @@ public class Neo4jQuery {
      * @return le noeud correspondant s'il existe dans la base
      */
     public Node FindNode(String label) {
+       // tx4j = graphDb.beginTx();
         Node find = null;
         ReadableIndex<Node> autoNodeIndex = graphDb.index()
                 .getNodeAutoIndexer()
                 .getAutoIndex();
         find = autoNodeIndex.get("texte", label).getSingle();
+      //  tx4j.success();
+      //  tx4j.finish();
         return find;
     }
    
@@ -98,6 +110,23 @@ public class Neo4jQuery {
         tx4j.finish();
         return list_node;
     }
+    
+    public List<Long> getIDNode(List<Node> source) {
+        tx4j = graphDb.beginTx();
+        List<Long> list_id = new ArrayList();
+        ExecutionEngine engine = new ExecutionEngine(graphDb);
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("node", source);
+        ExecutionResult result = engine.execute("start n=node({node}) return ID(n) as id", params);
+        Iterator n_column = result.columnAs("id");
+        while (n_column.hasNext()) {
+           long id = (long) n_column.next();
+            list_id.add(id);
+        }
+        tx4j.success();
+        tx4j.finish();
+        return list_id;
+    }
 
     /**
      * recup les noeuds cible d'une requete
@@ -113,7 +142,6 @@ public class Neo4jQuery {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("node", source);
         ExecutionResult result = engine.execute("start n=node({node}) match n--b return distinct b", params);
-        //ExecutionResult result = engine.execute("start n=node({node}) match n-->b return distinct b", params);
         Iterator<Node> n_column = result.columnAs("b");
         while (n_column.hasNext()) {
             Node node = n_column.next();
@@ -129,7 +157,7 @@ public class Neo4jQuery {
     } 
     /*******************************Query For Approche Possib***************************************************/
      public Map<Integer,Float> Frequency(Node c,List<Node> source){
-   
+       tx4j = graphDb.beginTx();
         ExecutionEngine engine = new ExecutionEngine(graphDb);
          Map<String, Object> params = new HashMap<String, Object>();
         params.put("node", source);
@@ -167,10 +195,13 @@ public class Neo4jQuery {
             mapft.put(id,ft);
         }
         }
+        tx4j.success();
+        tx4j.finish();
                 return mapft;
     }
     
       public Map<Integer, Float> log(List<Node> source,int nCa) {
+          tx4j = graphDb.beginTx();
         ExecutionEngine engine = new ExecutionEngine(graphDb);
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("node", source);
@@ -192,7 +223,8 @@ public class Neo4jQuery {
             map.put(id, log10);
            // System.out.println(id+" ==> " +maxoccur);
         }
-       
+       tx4j.success();
+       tx4j.finish();
         return map;
     }
     
@@ -204,7 +236,7 @@ public class Neo4jQuery {
          tx4j = graphDb.beginTx();
         List list_node = new ArrayList();
         ExecutionEngine engine = new ExecutionEngine(graphDb);
-        ExecutionResult result = engine.execute("start n=node("+s.getId()+") match n--b return distinct b order by ID(b)");
+        ExecutionResult result = engine.execute("start n=node("+s.getId()+") match n--b return distinct b");
         Iterator<Node> n_column = result.columnAs("b");
         while (n_column.hasNext()) {
             Node node = n_column.next();

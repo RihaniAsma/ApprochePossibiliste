@@ -4,12 +4,8 @@
  */
 package distanceAbaseCircuits.opeartions.Entity;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
 import javax.persistence.Query;
 
 /**
@@ -17,12 +13,13 @@ import javax.persistence.Query;
  * @author Rihani Asma
  */
 public class SqlQuery {
-    
-      private EntityManager em;
+    private EntityManager em;
 
     public SqlQuery(EntityManager em) {
         this.em = em;
     }
+    
+  
     
      public boolean exist(String mot){
         boolean exist = false;
@@ -38,19 +35,28 @@ public class SqlQuery {
 		em.persist(motReq);
        em.getTransaction().commit();
 }
+    public void saveCycle(CycleDataBean cdb) {
+       em.getTransaction().begin();
+		em.persist(cdb);
+       em.getTransaction().commit();
+}
    public float tatalPSIDeReq(List<Long> listmot_id ){
    float sum=0;
+   em.getTransaction().begin();
     Query resultat= em.createQuery("select sum(psi) from CycleDataBean p where p.mot_id.id in (:listmot_id)");
        resultat.setParameter("listmot_id", listmot_id);
          sum=(float)(double) resultat.getSingleResult();
+         em.getTransaction().commit();
    return sum;
    }
    public float tatalPSIDeNodeC(List<Long> listmot_id,Long node_id ){
    float sum=0;
+   em.getTransaction().begin();
     Query resultat= em.createQuery("select sum(psi) from CycleDataBean p where p.mot_id.id in (:listmot_id) and p.chemin like :node_id ");
        resultat.setParameter("listmot_id", listmot_id);
        resultat.setParameter("node_id", "%#"+node_id+"#%");
          sum=(float)(double) resultat.getSingleResult();
+         em.getTransaction().commit();
    return sum;
    }
    
