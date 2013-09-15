@@ -34,6 +34,13 @@ import org.neo4j.kernel.Traversal;
  * @author Rihani Asma
  */
 public class CalculAbaseDeCircuitInDB {
+    
+      public Neo4jQuery cq ;//= new Neo4jQuery();
+
+    public CalculAbaseDeCircuitInDB(Neo4jQuery cq) {
+        this.cq = cq;
+    }
+    
 
     public CalculAbaseDeCircuitInDB() {
     }
@@ -42,8 +49,6 @@ public class CalculAbaseDeCircuitInDB {
 
         OCCUR
     }
-    public Neo4jQuery cq = new Neo4jQuery();
-
     public void cycleSize2_3WithData(Node s, Node c, List<Node> source, Map<Node, Integer> occurSC, List<Node> aband, EntityManager em, MotReq mq) {
         Transaction tx4j = cq.getGraphDb().beginTx();
         Path path;
@@ -180,11 +185,12 @@ public class CalculAbaseDeCircuitInDB {
         // on récupère un EntityManager à  partir de l'EntityManagerFactory précédent
         em = emf.createEntityManager();
         SqlQuery sq = new SqlQuery(em);
+      //  cq.run();
         List<Node> sources = cq.getAllNodeSource(req);
         List<ResultBean> list_rb;//=new ArrayList();
         ResultBean rb;
         MotReq mq;
-        for (Node s : sources) {
+       for (Node s : sources) {
             mot = (String) s.getProperty("texte");
             if (!sq.exist(mot)) {
                 System.out.println("Creation des cycles de noeud " + mot);
@@ -200,9 +206,10 @@ public class CalculAbaseDeCircuitInDB {
         }
         //calcul de score des noeuds cibles
         List<Long> sources_id = cq.getIDNode(sources);
-        sources.clear();
         sumPsiTotal = sq.tatalPSIDeReq(sources_id);
+        //System.out.println(sumPsiTotal);
         List<Node> cibles = cq.getAllNodeCible(sources);
+      //  System.out.println(cibles.size());
         list_rb = new ArrayList();
         for (Node c : cibles) {
             rb = new ResultBean();
@@ -217,16 +224,18 @@ public class CalculAbaseDeCircuitInDB {
         Collections.reverse(list_rb);
         em.close();
         emf.close();
-      //  cq.shutdowndb();
+     //  cq.shutdowndb();
         return list_rb;
     }
 
-  /*  public static void main(String[] args) {
-        CalculAbaseDeCircuitInDB cc = new CalculAbaseDeCircuitInDB();
-        List<ResultBean> res = cc.calculScore("biologique1");
+   public static void main(String[] args) {
+        Neo4jQuery cq = new Neo4jQuery();
+        cq.run();
+        CalculAbaseDeCircuitInDB cc = new CalculAbaseDeCircuitInDB(cq);
+        List<ResultBean> res = cc.calculScore("biologique");
         for (ResultBean r : res) {
             System.out.println(r.getNodeC().getId() + "==>" + r.getScore());
         }
-
-    }*/
+cq.shutdowndb();
+    }
 }

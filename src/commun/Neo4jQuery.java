@@ -26,7 +26,22 @@ import org.neo4j.graphdb.index.ReadableIndex;
  */
 public class Neo4jQuery {
     
-     GraphDatabaseService graphDb = new GraphDatabaseFactory().
+     GraphDatabaseService graphDb;/* = new GraphDatabaseFactory().
+            newEmbeddedDatabaseBuilder("C:/Users/acer/Desktop/NEO4J-HOME/data/graph.db").
+            setConfig(GraphDatabaseSettings.node_keys_indexable, "texte").
+            setConfig(GraphDatabaseSettings.node_auto_indexing, "true").
+             setConfig(GraphDatabaseSettings.mapped_memory_page_size, "60M").
+             setConfig(GraphDatabaseSettings.nodestore_mapped_memory_size, "60M").
+             setConfig(GraphDatabaseSettings.query_cache_size, "600000").
+             setConfig(GraphDatabaseSettings.relationshipstore_mapped_memory_size, "60M").
+            newGraphDatabase();*/
+    Transaction tx4j;// = graphDb.beginTx();
+
+    public Neo4jQuery() {
+    }
+
+    public void run() {
+      graphDb = new GraphDatabaseFactory().
             newEmbeddedDatabaseBuilder("C:/Users/acer/Desktop/NEO4J-HOME/data/graph.db").
             setConfig(GraphDatabaseSettings.node_keys_indexable, "texte").
             setConfig(GraphDatabaseSettings.node_auto_indexing, "true").
@@ -35,9 +50,6 @@ public class Neo4jQuery {
              setConfig(GraphDatabaseSettings.query_cache_size, "600000").
              setConfig(GraphDatabaseSettings.relationshipstore_mapped_memory_size, "60M").
             newGraphDatabase();
-    Transaction tx4j;// = graphDb.beginTx();
-
-    public Neo4jQuery() {
     }
 
     public GraphDatabaseService getGraphDb() {

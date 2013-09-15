@@ -23,7 +23,12 @@ public class CalculPossibiliste {
     public CalculPossibiliste() {
     }
 
-     public Neo4jQuery cq=new Neo4jQuery();
+     public Neo4jQuery cq;//=new Neo4jQuery();
+
+    public CalculPossibiliste(Neo4jQuery cq) {
+        this.cq = cq;
+    }
+     
    
        /**
      * @param ft map des fréquences d'un noeud cible 
@@ -115,35 +120,14 @@ public class CalculPossibiliste {
        return list_rb;
     }
     
- /* public static void main(String[] args) {
-     CalculPossibiliste dq = new CalculPossibiliste();
- //List<Node> lst= dq.getAllNodeSource("discussion politique décision négociation préalable partir politique groupe social résultat final consultation Referendum constitution Afrique Sud "); 
- List<Node> lst= dq.cq.getAllNodeSource ("biologique1");
- //Node c=dq.FindNode("biologique3");
- // System.out.println(c.getId());
-/* Map<Integer, Float> m1= dq.essai(c, lst);
- Map<Integer, Float> m2=dq.log(lst);
- System.out.println(m1.size());
- System.out.println(m2.size());*/
-  //System.out.println("source "+lst.size());
- /*List<Node> cible=dq.cq.getAllNodeCible(lst);
- //System.out.println("cible "+cible.size());
- //System.out.println(dq.getNombreNodeCible(lst));
-for(Node n:cible)
-    System.out.print(n.getId()+",");
-   //Node c=dq.FindNode("politique");
- //System.out.println("source "+dq.getNombMaxOccur(c, lst));
-       //for(Node n:lst)
-          //System.out.println(dq.getNmbrCibleDeSource2(n));
-  /* Map<Integer, Integer> m=dq.getNombreNodeCjdeSi(lst);
-     Set listKeys=m.keySet();  // Obtenir la liste des clés
-    		Iterator iterateur=listKeys.iterator();
-    		// Parcourir les clés et afficher les entrées de chaque clé;
-    		while(iterateur.hasNext())
-    		{
-    			Object key= iterateur.next();
-    			System.out.println (key+" ==>"+m.get(key));
-    		}
- dq.shutdowndb();
-     }*/
-}
+ public static void main(String[] args) {
+       Neo4jQuery cq=new Neo4jQuery() ;
+      cq.run();
+     CalculPossibiliste dq = new CalculPossibiliste(cq);
+     List<ResultBean> rs=dq.calculScore("biologique mentionner");
+     for(ResultBean r:rs){
+     System.out.println(r.getNodeC().getProperty("texte")+"==>"+r.getScore());
+     }
+ cq.shutdowndb();
+     }
+ }

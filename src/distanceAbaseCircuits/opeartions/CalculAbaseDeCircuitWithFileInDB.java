@@ -43,7 +43,14 @@ import org.neo4j.kernel.Traversal;
  */
 public class CalculAbaseDeCircuitWithFileInDB {
 
-    private Neo4jQuery cq=new Neo4jQuery() ;
+    private Neo4jQuery cq;//=new Neo4jQuery() ;
+
+    public CalculAbaseDeCircuitWithFileInDB(Neo4jQuery cq) {
+        this.cq = cq;
+    }
+
+   
+    
 
   /*  public CalculAbaseDeCircuitWithFileInDB(Neo4jQuery cq) {
         this.cq = cq;
@@ -272,5 +279,15 @@ public class CalculAbaseDeCircuitWithFileInDB {
         emf.close();
         return list_rb;
 
+    }
+    public static void main(String[] args) throws IOException {
+        Neo4jQuery cq = new Neo4jQuery();
+        cq.run();
+        CalculAbaseDeCircuitWithFileInDB cc = new CalculAbaseDeCircuitWithFileInDB(cq);
+        List<ResultBean> res = cc.calculScore("biologique");
+        for (ResultBean r : res) {
+            System.out.println(r.getNodeC().getId() + "==>" + r.getScore());
+        }
+cq.shutdowndb();
     }
 }
